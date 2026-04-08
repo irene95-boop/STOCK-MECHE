@@ -1,0 +1,995 @@
+Set-Location -Path 'c:\Users\AGBARA\Documents\STOCK'; $content = @'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion de stock - Mèches</title>
+  <style>
+    :root {
+      --background: #111;
+      --surface: #181818;
+      --surface-alt: #1f1b26;
+      --text: #f8f1f4;
+      --text-muted: #c6b8be;
+      --accent: #de6d9e;
+      --accent-soft: #f4d3dc;
+      --gold: #d7b27d;
+      --danger: #ef6f6c;
+      --success: #6cd0a6;
+      --border: rgba(255,255,255,0.08);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(circle at top, rgba(222,109,158,0.12), transparent 25%),
+                  linear-gradient(180deg, #130f17 0%, #0b090d 100%);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/%3E%3C/svg%3E') center/450px repeat;
+      opacity: 0.16;
+      pointer-events: none;
+    }
+
+    .page {
+      width: min(1320px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 2.5vw, 2.8rem);
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      max-width: 640px;
+    }
+
+    .search-wrapper {
+      flex: 1 1 320px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .search-wrapper input {
+      width: 100%;
+      min-width: 220px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-wrapper input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-bottom: 24px;
+    }
+
+    .dashboard-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.10);
+    }
+
+    .dashboard-card strong {
+      display: inline-block;
+      font-size: 1.95rem;
+      line-height: 1;
+    }
+
+    .dashboard-card small {
+      color: var(--text-muted);
+    }
+
+    .dashboard-card .badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      width: fit-content;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .main-grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.12);
+    }
+
+    .panel h2 {
+      margin: 0 0 18px;
+      font-size: 1.4rem;
+      color: var(--gold);
+    }
+
+    .panel form {
+      display: grid;
+      gap: 14px;
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(222,109,158,0.7);
+      box-shadow: 0 0 0 4px rgba(222,109,158,0.12);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .actions button {
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      padding: 13px 20px;
+      font-weight: 700;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .actions button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), #c05d88);
+      color: #fff;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    .danger {
+      background: linear-gradient(135deg, #ef6f6c, #d65f65);
+      color: #fff;
+    }
+
+    .table-panel {
+      background: transparent;
+      padding: 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    th, td {
+      padding: 16px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    th {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.78rem;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #111;
+      background: var(--accent-soft);
+    }
+
+    .tag.low { background: #f9b7c7; color: #4e1e30; }
+    .tag.out { background: #ef6f6c; color: #541719; }
+    .tag.success { background: #6cd0a6; color: #0f3928; }
+
+    .product-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 28px 64px rgba(0,0,0,0.10);
+      position: relative;
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(222,109,158,0.12), transparent 45%);
+      pointer-events: none;
+    }
+
+    .product-card h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      z-index: 1;
+    }
+
+    .product-card small {
+      color: var(--text-muted);
+      z-index: 1;
+    }
+
+    .product-card .card-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .product-card .product-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      z-index: 1;
+    }
+
+    .product-card button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 600;
+      transition: transform 0.15s ease;
+      z-index: 1;
+    }
+
+    .product-card button:hover {
+      transform: translateY(-1px);
+    }
+
+    .special-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .history-panel {
+      margin-top: 28px;
+    }
+
+    .history-panel h3 {
+      margin-top: 0;
+      color: var(--gold);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-item {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .history-item span {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .history-item .badge {
+      background: rgba(255,255,255,0.08);
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+
+    .sales-chart-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-legend {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .chart-legend small {
+      color: var(--text-muted);
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      align-items: end;
+      min-height: 220px;
+    }
+
+    .chart-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-bar-inner {
+      width: 100%;
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(180deg, rgba(222,109,158,0.9), rgba(215,178,125,0.4));
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      min-height: 24px;
+      position: relative;
+    }
+
+    .chart-bar-inner span {
+      position: absolute;
+      top: -24px;
+      font-size: 0.8rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .chart-bar label {
+      margin-top: 4px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .message {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(222,109,158,0.18);
+      color: var(--text);
+      font-size: 0.92rem;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Gestion de stock - Boutique mèches</h1>
+        <p>Suivez vos mèches, gérez les ventes et les approvisionnements avec une interface claire et élégante.</p>
+      </div>
+      <div class="search-wrapper">
+        <input id="searchInput" type="search" placeholder="Rechercher une mèche (nom, couleur, type)..." aria-label="Recherche produit" />
+      </div>
+    </header>
+
+    <div class="card-grid">
+      <article class="dashboard-card">
+        <div>
+          <small>Produits en stock</small>
+          <strong id="totalProducts">0</strong>
+        </div>
+        <span class="badge"><span>✓</span> Gestion complète</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Valeur totale du stock</small>
+          <strong id="stockValue">0 FCFA</strong>
+        </div>
+        <span class="badge"><span>💰</span> Prix d’achat et vente</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Produits en rupture</small>
+          <strong id="outOfStockCount">0</strong>
+        </div>
+        <span class="badge"><span>⚠️</span> Suivi en temps réel</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Articles faibles (<5)</small>
+          <strong id="lowStockCount">0</strong>
+        </div>
+        <span class="badge"><span>🔥</span> Alerte automatique</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Ventes du jour</small>
+          <strong id="dailySalesCount">0</strong>
+        </div>
+        <span class="badge"><span>📈</span> Suivi rapide</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Chiffre d’affaires</small>
+          <strong id="revenueValue">0 FCFA</strong>
+        </div>
+        <span class="badge"><span>💸</span> Total ventes</span>
+      </article>
+      <article class="dashboard-card">
+        <div>
+          <small>Produit le plus vendu</small>
+          <strong id="topProductName">—</strong>
+        </div>
+        <span class="badge"><span>🏆</span> Best-seller</span>
+      </article>
+    </div>
+
+    <div class="main-grid">
+      <section class="panel">
+        <h2>Ajouter / Modifier une mèche</h2>
+        <div id="messageBox" class="message" hidden></div>
+        <form id="productForm">
+          <fieldset>
+            <label>
+              Nom de la mèche
+              <input type="text" id="productName" required placeholder="Ex: Mèche Naturelle 50cm" />
+            </label>
+            <label>
+              Type
+              <select id="productType" required>
+                <option value="naturelle">Naturelle</option>
+                <option value="synthétique">Synthétique</option>
+              </select>
+            </label>
+            <label>
+              Longueur
+              <select id="productLength" required>
+                <option value="10">10\"</option>
+                <option value="12">12\"</option>
+                <option value="14">14\"</option>
+                <option value="16">16\"</option>
+                <option value="18">18\"</option>
+                <option value="20">20\"</option>
+                <option value="22">22\"</option>
+                <option value="24">24\"</option>
+              </select>
+            </label>
+            <label>
+              Couleur
+              <input type="text" id="productColor" required placeholder="Ex: Noir, Blond, Marron" />
+            </label>
+            <label>
+              Prix d’achat (FCFA)
+              <input type="number" id="productCost" required min="0" step="1" placeholder="10000" />
+            </label>
+            <label>
+              Prix de vente (FCFA)
+              <input type="number" id="productPrice" required min="0" step="1" placeholder="18000" />
+            </label>
+            <label>
+              Quantité en stock
+              <input type="number" id="productQuantity" required min="0" step="1" placeholder="5" />
+            </label>
+          </fieldset>
+
+          <div class="actions">
+            <button type="submit" class="primary" id="submitButton">Ajouter le produit</button>
+            <button type="button" class="secondary" id="resetButton">Réinitialiser</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="special-row" style="margin-bottom: 18px; gap:16px;">
+          <div>
+            <h2>Produits</h2>
+            <p style="margin:4px 0 0;color:var(--text-muted);">Tableau de suivi avec actions rapides.</p>
+          </div>
+          <button type="button" class="primary" id="addSampleButton">Ajouter exemples</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Longueur</th>
+                <th>Couleur</th>
+                <th>Stock</th>
+                <th>Prix vente</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="history-panel">
+          <h3>Historique des mouvements</h3>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top: 18px;">
+      <h2>Tableau de bord ventes</h2>
+      <div class="sales-chart-panel">
+        <div class="chart-legend">
+          <span>Graphique des ventes récentes</span>
+          <small>Montant total par jour (7 derniers jours)</small>
+        </div>
+        <div id="salesChart" class="chart-grid"></div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 24px;">
+      <h2>Cartes produits</h2>
+      <div id="productCards" class="card-grid"></div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_PRODUCTS = 'stock_products';
+    const STORAGE_HISTORY = 'stock_history';
+    const searchInput = document.getElementById('searchInput');
+    const productForm = document.getElementById('productForm');
+    const productName = document.getElementById('productName');
+    const productType = document.getElementById('productType');
+    const productLength = document.getElementById('productLength');
+    const productColor = document.getElementById('productColor');
+    const productCost = document.getElementById('productCost');
+    const productPrice = document.getElementById('productPrice');
+    const productQuantity = document.getElementById('productQuantity');
+    const productTableBody = document.getElementById('productTableBody');
+    const productCards = document.getElementById('productCards');
+    const historyList = document.getElementById('historyList');
+    const totalProducts = document.getElementById('totalProducts');
+    const stockValue = document.getElementById('stockValue');
+    const outOfStockCount = document.getElementById('outOfStockCount');
+    const lowStockCount = document.getElementById('lowStockCount');
+    const dailySalesCount = document.getElementById('dailySalesCount');
+    const revenueValue = document.getElementById('revenueValue');
+    const topProductName = document.getElementById('topProductName');
+    const salesChart = document.getElementById('salesChart');
+    const messageBox = document.getElementById('messageBox');
+    const submitButton = document.getElementById('submitButton');
+    const resetButton = document.getElementById('resetButton');
+    const addSampleButton = document.getElementById('addSampleButton');
+
+    let products = [];
+    let history = [];
+    let editId = null;
+
+    const initialProducts = [
+      { id: crypto.randomUUID(), name: 'Mèche naturelle 45cm', type: 'naturelle', length: '18', color: 'Noir profond', cost: 28.50, price: 58.00, quantity: 12 },
+      { id: crypto.randomUUID(), name: 'Mèche synthétique 30cm', type: 'synthétique', length: '12', color: 'Brun châtain', cost: 8.20, price: 18.00, quantity: 4 },
+      { id: crypto.randomUUID(), name: 'Mèche naturelle 55cm', type: 'naturelle', length: '22', color: 'Blond doré', cost: 34.00, price: 68.00, quantity: 2 },
+      { id: crypto.randomUUID(), name: 'Mèche synthétique 40cm', type: 'synthétique', length: '16', color: 'Noir', cost: 9.40, price: 22.00, quantity: 7 }
+    ];
+
+    function loadData() {
+      const storedProducts = localStorage.getItem(STORAGE_PRODUCTS);
+      const storedHistory = localStorage.getItem(STORAGE_HISTORY);
+      products = storedProducts ? JSON.parse(storedProducts) : [...initialProducts];
+      history = storedHistory ? JSON.parse(storedHistory) : [];
+      render();
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_PRODUCTS, JSON.stringify(products));
+      localStorage.setItem(STORAGE_HISTORY, JSON.stringify(history));
+    }
+
+    function render() {
+      const query = searchInput.value.trim().toLowerCase();
+      const filtered = products.filter(product => {
+        const values = [product.name, product.type, product.color, product.length].join(' ').toLowerCase();
+        return values.includes(query);
+      });
+
+      renderTable(filtered);
+      renderCards(filtered);
+      renderStats();
+      renderSalesDashboard();
+      renderHistory();
+    }
+
+    function renderTable(list) {
+      if (!productTableBody) return;
+      productTableBody.innerHTML = list.map(product => {
+        const low = product.quantity > 0 && product.quantity < 5;
+        const out = product.quantity === 0;
+        return `
+          <tr>
+            <td>${product.name}</td>
+            <td>${product.type}</td>
+            <td>${product.length}\"</td>
+            <td>${product.color}</td>
+            <td>
+              ${out ? '<span class="tag out">Rupture</span>' : low ? `<span class="tag low">${product.quantity} pcs</span>` : `<span class="tag success">${product.quantity} pcs</span>`}
+            </td>
+            <td>${product.price.toFixed(0)} FCFA</td>
+            <td>
+              <button type="button" class="secondary" onclick="window.handleAddStock('${product.id}')">+ Stock</button>
+              <button type="button" class="primary" onclick="window.handleSale('${product.id}')">Vente</button>
+              <button type="button" class="secondary" onclick="window.handleEdit('${product.id}')">Modifier</button>
+              <button type="button" class="danger" onclick="window.handleDelete('${product.id}')">Supprimer</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px 0;">Aucun produit ne correspond à la recherche.</td></tr>';
+    }
+
+    function renderCards(list) {
+      productCards.innerHTML = list.map(product => {
+        const low = product.quantity > 0 && product.quantity < 5;
+        const out = product.quantity === 0;
+        return `
+          <article class="product-card">
+            <div class="card-row">
+              <h3>${product.name}</h3>
+              <span class="tag ${out ? 'out' : low ? 'low' : 'success'}">${out ? 'Rupture' : low ? 'Faible' : 'OK'}</span>
+            </div>
+            <small>Type: ${product.type} · Longueur: ${product.length}\" · Couleur: ${product.color}</small>
+            <div class="card-row">
+              <span>Prix achat: ${product.cost.toFixed(0)} FCFA</span>
+              <span>Prix vente: ${product.price.toFixed(0)} FCFA</span>
+            </div>
+            <div class="card-row">
+              <span>Stock: <strong>${product.quantity}</strong></span>
+              <span>Valeur: <strong>${formatCFA(product.price * product.quantity)}</strong></span>
+            </div>
+            <div class="product-actions">
+              <button type="button" onclick="window.handleAddStock('${product.id}')">Ajouter du stock</button>
+              <button type="button" onclick="window.handleSale('${product.id}')">Vente effectuée</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderStats() {
+      const total = products.length;
+      const value = products.reduce((sum, item) => sum + item.cost * item.quantity, 0);
+      const outCount = products.filter(p => p.quantity === 0).length;
+      const lowCount = products.filter(p => p.quantity > 0 && p.quantity < 5).length;
+      totalProducts.textContent = total;
+      stockValue.textContent = formatCFA(value);
+      outOfStockCount.textContent = outCount;
+      lowStockCount.textContent = lowCount;
+    }
+
+    function formatCFA(amount) {
+      return `${amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA`;
+    }
+
+    function getSalesByDay(days = 7) {
+      const result = [];
+      const today = new Date();
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const key = date.toISOString().slice(0, 10);
+        result.push({ key, label: date.toLocaleDateString('fr-FR', { weekday: 'narrow' }), revenue: 0, count: 0 });
+      }
+      history.forEach(entry => {
+        if (entry.action !== 'Vente effectuée') return;
+        const entryDate = new Date(entry.date).toISOString().slice(0, 10);
+        const day = result.find(item => item.key === entryDate);
+        if (day) {
+          day.revenue += entry.revenue || 0;
+          day.count += entry.quantity;
+        }
+      });
+      return result;
+    }
+
+    function getDailySalesCount() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      return history.filter(entry => entry.action === 'Vente effectuée' && new Date(entry.date).toISOString().slice(0, 10) === todayKey)
+        .reduce((sum, entry) => sum + entry.quantity, 0);
+    }
+
+    function getRevenueTotal() {
+      return history.filter(entry => entry.action === 'Vente effectuée')
+        .reduce((sum, entry) => sum + (entry.revenue || 0), 0);
+    }
+
+    function getTopSoldProduct() {
+      const counts = {};
+      history.filter(entry => entry.action === 'Vente effectuée')
+        .forEach(entry => {
+          counts[entry.name] = (counts[entry.name] || 0) + entry.quantity;
+        });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      return sorted.length ? `${sorted[0][0]} (${sorted[0][1]} pcs)` : '—';
+    }
+
+    function renderSalesDashboard() {
+      if (!dailySalesCount || !revenueValue || !topProductName || !salesChart) return;
+      dailySalesCount.textContent = getDailySalesCount();
+      revenueValue.textContent = formatCFA(getRevenueTotal());
+      topProductName.textContent = getTopSoldProduct();
+      const chartData = getSalesByDay(7);
+      const maxRevenue = Math.max(...chartData.map(d => d.revenue), 1);
+      salesChart.innerHTML = chartData.map(item => {
+        const height = item.revenue ? Math.max(32, Math.min(180, (item.revenue / maxRevenue) * 180)) : 16;
+        return `
+          <div class="chart-bar">
+            <div class="chart-bar-inner" style="height:${height}px;">
+              <span>${item.revenue ? formatCFA(item.revenue) : '0'}</span>
+            </div>
+            <label>${item.label}</label>
+          </div>`;
+      }).join('');
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="history-item">Aucun mouvement enregistré pour le moment.</div>';
+        return;
+      }
+      historyList.innerHTML = history.slice().reverse().map(entry => `
+        <article class="history-item">
+          <span><strong>${entry.action}</strong> — ${entry.name} (${entry.quantity} pcs)</span>
+          <span><span class="badge">${entry.type}</span> ${new Date(entry.date).toLocaleString('fr-FR')}</span>
+          <span>Stock après mouvement : ${entry.afterQuantity} pcs | ${entry.note}</span>
+        </article>
+      `).join('');
+    }
+
+    function showMessage(text, type = 'info') {
+      messageBox.hidden = false;
+      messageBox.textContent = text;
+      messageBox.style.borderColor = type === 'error' ? 'rgba(239,111,108,0.35)' : 'rgba(222,109,158,0.35)';
+      messageBox.style.background = type === 'error' ? 'rgba(239,111,108,0.08)' : 'rgba(222,109,158,0.08)';
+      setTimeout(() => { messageBox.hidden = true; }, 4200);
+    }
+
+    function resetForm() {
+      productForm.reset();
+      editId = null;
+      submitButton.textContent = 'Ajouter le produit';
+    }
+
+    function validateProduct(data) {
+      return data.name && data.color && data.length && data.price >= 0 && data.cost >= 0 && data.quantity >= 0;
+    }
+
+    function handleAddOrUpdate(event) {
+      event.preventDefault();
+      const productData = {
+        name: productName.value.trim(),
+        type: productType.value,
+        length: productLength.value,
+        color: productColor.value.trim(),
+        cost: parseFloat(productCost.value) || 0,
+        price: parseFloat(productPrice.value) || 0,
+        quantity: parseInt(productQuantity.value, 10) || 0
+      };
+
+      if (!validateProduct(productData)) {
+        showMessage('Veuillez remplir tous les champs correctement.', 'error');
+        return;
+      }
+
+      if (editId) {
+        products = products.map(item => item.id === editId ? { ...item, ...productData, id: item.id } : item);
+        showMessage('Produit mis à jour avec succès.');
+      } else {
+        products.push({ ...productData, id: crypto.randomUUID() });
+        showMessage('Nouveau produit ajouté au stock.');
+      }
+
+      saveData();
+      render();
+      resetForm();
+    }
+
+    function handleEdit(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      editId = id;
+      productName.value = product.name;
+      productType.value = product.type;
+      productLength.value = product.length;
+      productColor.value = product.color;
+      productCost.value = product.cost;
+      productPrice.value = product.price;
+      productQuantity.value = product.quantity;
+      submitButton.textContent = 'Mettre à jour';
+      productName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function handleDelete(id) {
+      if (!confirm('Supprimer définitivement ce produit ?')) return;
+      products = products.filter(product => product.id !== id);
+      saveData();
+      render();
+      showMessage('Produit supprimé du catalogue.');
+    }
+
+    function logHistory(action, type, product, quantity, afterQuantity, note = '') {
+      history.push({
+        id: crypto.randomUUID(),
+        action,
+        type,
+        name: product.name,
+        quantity,
+        afterQuantity,
+        date: new Date().toISOString(),
+        note
+      });
+      if (history.length > 80) history.shift();
+      saveData();
+    }
+
+    function handleAddStock(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      const amount = parseInt(prompt('Quantité à ajouter :', '5'), 10);
+      if (!amount || amount <= 0) {
+        showMessage('Quantité invalide.', 'error');
+        return;
+      }
+      product.quantity += amount;
+      saveData();
+      logHistory('Approvisionnement', 'Entrée', product, amount, product.quantity, `+${amount} ajouté`);
+      render();
+      showMessage(`${amount} unités ajoutées à ${product.name}.`);
+    }
+
+    function handleSale(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      if (product.quantity === 0) {
+        showMessage('Impossible de vendre : stock épuisé.', 'error');
+        return;
+      }
+      const amount = parseInt(prompt('Nombre d’unités vendues :', '1'), 10);
+      if (!amount || amount <= 0 || amount > product.quantity) {
+        showMessage('Quantité de vente invalide.', 'error');
+        return;
+      }
+      product.quantity -= amount;
+      saveData();
+      logHistory('Vente effectuée', 'Sortie', product, amount, product.quantity, `-${amount} vendu`);
+      render();
+      showMessage(`${amount} unité(s) vendue(s) de ${product.name}.`);
+    }
+
+    function addSampleData() {
+      const countBefore = products.length;
+      initialProducts.forEach(item => {
+        if (!products.some(product => product.name === item.name && product.length === item.length && product.color === item.color)) {
+          products.push({ ...item, id: crypto.randomUUID() });
+        }
+      });
+      saveData();
+      render();
+      const added = products.length - countBefore;
+      showMessage(`${added} produits exemples ajoutés.`);
+    }
+
+    window.handleEdit = handleEdit;
+    window.handleDelete = handleDelete;
+    window.handleAddStock = handleAddStock;
+    window.handleSale = handleSale;
+
+    searchInput.addEventListener('input', render);
+    productForm.addEventListener('submit', handleAddOrUpdate);
+    resetButton.addEventListener('click', resetForm);
+    addSampleButton.addEventListener('click', addSampleData);
+
+    loadData();
+  </script>
+</body>
+</html>
+'@; Set-Content -Path .\index.html -Value $content -Encoding UTF8
